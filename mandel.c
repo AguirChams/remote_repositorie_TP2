@@ -1,7 +1,7 @@
-#include <stdio.h>
+#include "ppm.h"
 #include <complex.h>
 #include <math.h>
-#include "ppm.h"
+#include <stdio.h>
 
 #define TRSH 2.0
 #define ITER 1024ull
@@ -9,37 +9,65 @@
 #define SIZEX 1500
 #define SIZEY 1500
 
-double cx(int x)
-{
-    /* -2 ---> 1 */
+/* Structure pour la couleur */
+struct col {
+    int r;
+    int g;
+    int b;
+};
+
+/* Fonction pour calculer la couleur */
+struct col getcol(int val, int max) {
+    double q = (double)val / (double)max;
+    struct col c = {0, 0, 0};
+
+    if (q < 0.25) {
+        c.r = (q * 4.0) * 255.0;
+        c.b = 255;
+    } else if (q < 0.5) {
+        c.b = 255;
+        c.g = 255;
+        c.r = (q - 0.25) * 4.0 * 255.0;
+    } else if (q < 0.75) {
+        c.b = 255;
+        c.r = 255;
+        c.g = 255.0 - (q - 0.5) * 4.0 * 255.0;
+    } else {
+        c.b = 255 - (q - 0.75) * 4.0 * 255.0;
+        c.g = 0;
+        c.r = 255;
+    }
+
+    return c;
+}
+
+/* Calcul des coordonnées x */
+double cx(int x) {
     static const double qx = 3.0 / (double)SIZEX;
     return -2.0 + x * qx;
 }
 
-double cy(int y)
-{
-    /* -1 ---> 1 */
+/* Calcul des coordonnées y */
+double cy(int y) {
     static const double qy = 2.0 / (double)SIZEY;
     return -1.0 + y * qy;
 }
 
-int main(void)
-{
+int main(int argc, char *argv[]) {
     struct ppm_image im;
     ppm_image_init(&im, SIZEX, SIZEY);
 
-    double colref = 255.0 / log(ITER);
+    int i, j;
+    int colref = log(ITER); // Référence pour la couleur
 
-    for (int i = 0; i < SIZEX; ++i) {
-        for (int j = 0; j < SIZEY; ++j) {
-
+    /* Calcul du Mandelbrot et assignation des couleurs */
+    for (i = 0; i < SIZEX; ++i) {
+        for (j = 0; j < SIZEY; ++j) {
             unsigned long int iter = 0;
-
             double complex c = cx(i) + cy(j) * I;
             double complex z = 0;
 
-            while (iter < ITER)
-            {
+            while (iter < ITER) {
                 double mod = cabs(z);
 
                 if (TRSH < mod) {
@@ -50,11 +78,13 @@ int main(void)
                 iter++;
             }
 
-            int grey = colref * log(iter);
-            ppm_image_setpixel(&im, i, j, grey, grey, grey);
+            /* Affectation des couleurs */
+            struct col cc = getcol(log(iter), colref);
+            ppm_image_setpixel(&im, i, j, cc.r, cc.g, cc.b);
         }
     }
 
+    /* Sauvegarde de l'image */
     ppm_image_dump(&im, "m.ppm");
     ppm_image_release(&im);
 
