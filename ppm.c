@@ -10,7 +10,7 @@ int ppm_image_init(struct ppm_image *im, int w, int h) {
     im->width = w;   // Définir la largeur de l'image
     im->height = h;  // Définir la hauteur de l'image
 
-    im->px = malloc(w * h * sizeof(struct ppm_pixel));  // Allouer de la mémoire pour les pixels
+    im->px = malloc(w * h * sizeof( struct ppm_pixel));  // Allouer de la mémoire pour les pixels
 
     if (!im->px) {  // Vérifier l'échec de l'allocation mémoire
         perror("malloc");
