@@ -41,6 +41,20 @@ struct col getcol(int val, int max) {
     return c;
 }
 
+/* Fonction de zoom */
+void zoom(double *x_min, double *x_max, double *y_min, double *y_max, double factor) {
+    double x_center = (*x_min + *x_max) / 2;
+    double y_center = (*y_min + *y_max) / 2;
+
+    double width = (*x_max - *x_min) / factor;
+    double height = (*y_max - *y_min) / factor;
+
+    *x_min = x_center - width / 2;
+    *x_max = x_center + width / 2;
+    *y_min = y_center - height / 2;
+    *y_max = y_center + height / 2;
+}
+
 /* Calcul des coordonnées x */
 double cx(int x) {
     static const double qx = 3.0 / (double)SIZEX;
@@ -55,22 +69,22 @@ double cy(int y) {
 
 int main(int argc, char *argv[]) {
     struct ppm_image im;
-    ppm_image_init(&im, SIZEX, SIZEY);
+    if (ppm_image_init(&im, SIZEX, SIZEY) != 0) {
+        fprintf(stderr, "Erreur : Impossible d'initialiser l'image PPM\n");
+        return 1;
+    }
 
-    int i, j;
     int colref = log(ITER); // Référence pour la couleur
 
     /* Calcul du Mandelbrot et assignation des couleurs */
-    for (i = 0; i < SIZEX; ++i) {
-        for (j = 0; j < SIZEY; ++j) {
+    for (int i = 0; i < SIZEX; ++i) {
+        for (int j = 0; j < SIZEY; ++j) {
             unsigned long int iter = 0;
             double complex c = cx(i) + cy(j) * I;
             double complex z = 0;
 
             while (iter < ITER) {
-                double mod = cabs(z);
-
-                if (TRSH < mod) {
+                if (cabs(z) > TRSH) {
                     break;
                 }
 
@@ -79,13 +93,19 @@ int main(int argc, char *argv[]) {
             }
 
             /* Affectation des couleurs */
-            struct col cc = getcol(log(iter), colref);
+            struct col cc = getcol(log(iter + 1), colref); // Ajout de +1 pour éviter log(0)
             ppm_image_setpixel(&im, i, j, cc.r, cc.g, cc.b);
         }
     }
 
     /* Sauvegarde de l'image */
-    ppm_image_dump(&im, "m.ppm");
+    if (ppm_image_dump(&im, "m.ppm") != 0) {
+        fprintf(stderr, "Erreur : Impossible de sauvegarder l'image\n");
+        ppm_image_release(&im);
+        return 1;
+    }
+
+    /* Libération de la mémoire */
     ppm_image_release(&im);
 
     return 0;
