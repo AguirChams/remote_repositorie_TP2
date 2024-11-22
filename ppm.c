@@ -1,12 +1,10 @@
 #include "ppm.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 /* Fonction pour initialiser une image PPM */
-int ppm_image_init(struct ppm_image *im, int w, int h)
-{
+int ppm_image_init(struct ppm_image *im, int w, int h) {
     memset(im, 0, sizeof(struct ppm_image));  // Réinitialiser la structure
 
     im->width = w;   // Définir la largeur de l'image
@@ -23,8 +21,7 @@ int ppm_image_init(struct ppm_image *im, int w, int h)
 }
 
 /* Fonction pour libérer la mémoire d'une image PPM */
-int ppm_image_release(struct ppm_image *im)
-{
+int ppm_image_release(struct ppm_image *im) {
     if (im == NULL)  // Vérifier si l'image est déjà nulle
         return 1;
 
@@ -38,8 +35,7 @@ int ppm_image_release(struct ppm_image *im)
 }
 
 /* Fonction pour sauvegarder une image PPM dans un fichier */
-int ppm_image_dump(struct ppm_image *im, char *path)
-{
+int ppm_image_dump(struct ppm_image *im, char *path) {
     FILE *out = fopen(path, "w");  // Ouvrir le fichier en écriture
 
     if (!out) {  // Vérifier si l'ouverture du fichier a échoué
